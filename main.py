@@ -1,6 +1,6 @@
 import streamlit as st
-import pandas as pd
 import yfinance as yf
+from datetime import timedelta
 
 
 # função de carregamento de dados
@@ -22,14 +22,26 @@ st.write("""
 """)
 
 # prepara as visualizações
-lista_acoes = st.multiselect("Selecione as acões que deseja visualizar", dados.columns)
+st.sidebar.header("Filtros")
+
+# filtro de ações
+lista_acoes = st.sidebar.multiselect("Selecione as acões que deseja visualizar", dados.columns)
 if lista_acoes:
     dados = dados[lista_acoes]
     if len(lista_acoes) == 1:
         acao_unica = lista_acoes[0]
         dados = dados.rename(columns={acao_unica: "Close"})
 
+# filtro de datas
+data_inicial = dados.index.min().to_pydatetime()
+data_final = dados.index.max().to_pydatetime()
 
+intervalo_data = st.sidebar.slider("Selecione o período desejado",
+                                   min_value=data_inicial,
+                                   max_value=data_final,
+                                   value=(data_inicial, data_final),
+                                   step=timedelta(days=30))
 
+dados = dados.loc[intervalo_data[0]: intervalo_data[1]]
 # grafico de area
 st.line_chart(dados)
